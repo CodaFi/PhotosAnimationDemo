@@ -34,17 +34,18 @@
     [self.view addSubview: toolbar];
     
     //create a second image view (i.e. cheat)
-    animatedImageView_ = [[UIImageView alloc]initWithFrame:CGRectMake(0, 22.0f, self.view.bounds.size.width, self.view.bounds.size.height)];
+    animatedImageView_ = [[UIImageView alloc]initWithFrame:CGRectMake(0, CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame])+CGRectGetHeight(self.navigationController.navigationBar.frame), self.view.bounds.size.width, self.view.bounds.size.height- CGRectGetHeight(self.navigationController.navigationBar.frame))];
     [animatedImageView_ setContentMode:UIViewContentModeScaleAspectFit];
     
     //cheat harder
-    sheetView_ = [[UIView alloc]initWithFrame:CGRectMake(0, self.view.bounds.size.height+22, self.view.bounds.size.width, 300)];
+    sheetView_ = [[UIView alloc]initWithFrame:CGRectMake(0, self.view.bounds.size.height+44, self.view.bounds.size.width, 300)];
     [sheetView_ setBackgroundColor:[UIColor whiteColor]];
+    
 }
 
 -(void)animatePhotoToMail {
     [animatedImageView_ setImage:imageView_.image];
-    [imageView_ removeFromSuperview];
+    [imageView_ setAlpha:0.0f];
     
     //add sheetview first, which is offscreen
     [self.view.window addSubview:sheetView_];
@@ -53,7 +54,7 @@
     
     [UIView animateWithDuration:0.75 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
         //close enough for now.  Will tweak later
-        [animatedImageView_ setTransform:CGAffineTransformMakeScale(0.6, 0.6)];
+        [animatedImageView_ setTransform:CGAffineTransformConcat(CGAffineTransformMakeScale(0.5, 0.5), CGAffineTransformMakeTranslation(0, -88))];
         
     }completion:^(BOOL finished){
         if([MFMailComposeViewController canSendMail])
@@ -76,7 +77,7 @@
             emailDialog.mailComposeDelegate = self;
             [emailDialog setMessageBody:emailBody isHTML:YES];
             //hard coded guess.  Should calculate actual delay in a subclass, but too lazy.
-            [UIView animateWithDuration:0.5 delay:0.25 options:UIViewAnimationOptionCurveEaseOut  animations:^{
+            [UIView animateWithDuration:0.5 delay:0.35 options:UIViewAnimationOptionCurveEaseOut  animations:^{
                 //sheet view animates in with the view controller to disguise the HTML image and the siggy.  See, cheating.
                 [sheetView_ setFrame:CGRectMake(0, 200, self.view.bounds.size.width, 260)];
             }
@@ -85,11 +86,17 @@
             [self.navigationController presentViewController:emailDialog animated:YES completion:^{
                 [UIView animateWithDuration:0.75 delay:0.35 options:UIViewAnimationOptionCurveEaseOut animations:^{
                     //hard coded guess.  Should calculate actual image frames, but laziness should suffice for now.
-                    [animatedImageView_ setTransform:CGAffineTransformConcat(CGAffineTransformMakeScale(0.938, 0.938), CGAffineTransformMakeTranslation(0, 72))];
+                    [animatedImageView_ setTransform:CGAffineTransformConcat(CGAffineTransformMakeScale(0.938, 0.938), CGAffineTransformMakeTranslation(0, 52))];
                 }completion:^(BOOL finished){
                     //cleanup.
                     [animatedImageView_ removeFromSuperview];
                     [sheetView_ removeFromSuperview];
+                    [animatedImageView_ setTransform:CGAffineTransformIdentity];
+                    [animatedImageView_ setFrame: CGRectMake(0, CGRectGetHeight([[UIApplication sharedApplication] statusBarFrame])+CGRectGetHeight(self.navigationController.navigationBar.frame), self.view.bounds.size.width, self.view.bounds.size.height)];
+                    NSLog(@"%@ %@", NSStringFromCGRect(imageView_.frame), NSStringFromCGRect(animatedImageView_.frame));
+                    [sheetView_ setFrame:CGRectMake(0, self.view.bounds.size.height+66, self.view.bounds.size.width, 300)];
+                    [imageView_ setAlpha:1.0f];
+                    
                 }];
             }];
         }
@@ -102,7 +109,7 @@
         //do absolutely nothing
     }];
 #else 
-    [self dismissModalViewControllerAnimated:YES]
+    [self dismissModalViewControllerAnimated:YES];
 #endif
     
 
